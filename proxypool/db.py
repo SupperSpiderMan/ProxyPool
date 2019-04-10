@@ -1,4 +1,4 @@
-import redis
+import redis, random
 from proxypool.error import PoolEmptyError
 from proxypool.setting import HOST, PORT, PASSWORD
 
@@ -6,9 +6,14 @@ from proxypool.setting import HOST, PORT, PASSWORD
 class RedisClient(object):
     def __init__(self, host=HOST, port=PORT):
         if PASSWORD:
-            self._db = redis.Redis(host=host, port=port, password=PASSWORD)
+            self._db = redis.Redis(host=host, port=port, password=PASSWORD, db=1)
         else:
-            self._db = redis.Redis(host=host, port=port)
+            self._db = redis.Redis(host=host, port=port, db=1)
+
+    def random_get(self):
+        num = random.randint(1, self.queue_len)
+        return self._db.lindex("proxies", num-1).decode("utf-8")
+
 
     def get(self, count=1):
         """
@@ -22,6 +27,13 @@ class RedisClient(object):
         """
         add proxy to right top
         """
+        self._db.rpush("proxies", proxy)
+
+    def no_repeat_put(self, proxy):
+        """
+        no repeat ad into redis proxy list
+        """
+        self._db.lrem("proxies", proxy, num=0)
         self._db.rpush("proxies", proxy)
 
     def pop(self):

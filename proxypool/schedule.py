@@ -37,7 +37,7 @@ class ValidityTester(object):
                     print('Testing', proxy)
                     async with session.get(self.test_api, proxy=real_proxy, timeout=get_proxy_timeout) as response:
                         if response.status == 200:
-                            self._conn.put(proxy)
+                            self._conn.no_repeat_put(proxy)
                             print('Valid proxy', proxy)
                 except (ProxyConnectionError, TimeoutError, ValueError):
                     print('Invalid proxy', proxy)
